@@ -1,0 +1,1 @@
+print("Das ist mein Generative Projekt Vadym Filatov 10042025")
