@@ -1,0 +1,44 @@
+{
+  "os":  "macOS-15.3.2-arm64-arm-64bit",
+  "python":  "CPython 3.12.7",
+  "startedAt":  "2025-04-16T20:44:55.596176Z",
+  "program":  "/Users/onurozdemir/Desktop/Gen_AI_Projekt/GenerativeAI-Project/GenAI_Projekt.ipynb",
+  "codePath":  "GenAI_Projekt.ipynb",
+  "git":  {
+    "remote":  "https://github.com/onurozdemir35/GenerativeAI-Project.git",
+    "commit":  "a4f2bcc60c747e7308dd32b2a5c1b997b701ff47"
+  },
+  "email":  "onurrozdemr@gmail.com",
+  "root":  "/Users/onurozdemir/Desktop/Gen_AI_Projekt/GenerativeAI-Project",
+  "host":  "MacBook-Air-von-Onur.local",
+  "executable":  "/opt/anaconda3/bin/python",
+  "codePathLocal":  "GenAI_Projekt.ipynb",
+  "cpu_count":  8,
+  "cpu_count_logical":  8,
+  "disk":  {
+    "/":  {
+      "total":  "494384795648",
+      "used":  "71017771008"
+    },
+    "/System/Volumes/Data":  {
+      "total":  "494384795648",
+      "used":  "71017771008"
+    }
+  },
+  "memory":  {
+    "total":  "25769803776"
+  },
+  "cpu":  {
+    "count":  8,
+    "countLogical":  8
+  },
+  "apple":  {
+    "name":  "Apple M3",
+    "ecpuCores":  4,
+    "pcpuCores":  4,
+    "gpuCores":  10,
+    "memoryGb":  24,
+    "swapTotalBytes":  "2147483648",
+    "ramTotalBytes":  "25769803776"
+  }
+}
