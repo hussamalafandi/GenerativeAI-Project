@@ -1,0 +1,1 @@
+{"epoch":5,"train_loss":6.563460350036621,"val_loss":7.045371770858765,"generated_text":{"sha256":"1c6855768e9925cd02f1b106c783acb5938ba221f1aed7d566f6d6bcb1f8b487","size":243,"path":"media/html/generated_text_4_1c6855768e9925cd02f1.html","_type":"html-file"},"_timestamp":1.7449666190143101e+09,"_wandb":{"runtime":621},"_runtime":621.5242597,"_step":4}

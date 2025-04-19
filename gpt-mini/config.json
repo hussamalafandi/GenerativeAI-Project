@@ -1,0 +1,14 @@
+{
+  "architectures": [
+    "GPTDecoderOnlyModel"
+  ],
+  "d_model": 128,
+  "dim_feedforward": 256,
+  "dropout": 0.1,
+  "max_seq_length": 128,
+  "nhead": 4,
+  "num_layers": 2,
+  "torch_dtype": "float32",
+  "transformers_version": "4.51.2",
+  "vocab_size": 50257
+}
