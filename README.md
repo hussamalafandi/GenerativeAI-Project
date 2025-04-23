@@ -1,3 +1,22 @@
+# Abgabe Laila
+
+Das Jupiter Notebook befindet sich in der 
+
+laila_gpt_neu_FINAL.ipynb
+
+Die Bonusaufgabe wurden ebenfalls bearbeitet:
+
+## Model auf Hugginface
+
+https://huggingface.co/lailaterrak/genai-abschluss/tree/main
+
+## Trainings Logs auf Wandb
+
+https://wandb.ai/lailaterrak-hochshule-hannover/abschlussprojekt_sprachmodell/runs/if0ngkhv?nw=nwuserlailaterrak
+
+
+
+
 # 🧠 Abschlussprojekt: Entwicklung eines eigenen Sprachmodells
 
 Willkommen zum Abschlussprojekt dieses Kurses! In diesem Projekt setzt du dein Wissen über Sprachmodelle in die Praxis um und entwickelst dein eigenes autoregressives Modell auf Basis von PyTorch. Zusätzlich lernst du Tools wie Weights & Biases (wandb) und den Hugging Face Model Hub kennen – genau wie im echten ML-Workflow.
