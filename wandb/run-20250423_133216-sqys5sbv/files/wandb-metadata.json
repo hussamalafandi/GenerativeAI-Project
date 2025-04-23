@@ -1,0 +1,31 @@
+{
+  "os": "Windows-11-10.0.22631-SP0",
+  "python": "CPython 3.13.1",
+  "startedAt": "2025-04-23T11:32:17.604347Z",
+  "program": "c:\\Users\\hshakademie7\\Desktop\\INTOCODE WEITERBILDUNG\\Generative_Al_project\\GenerativeAI-Project\\Sprachmodells.ipynb",
+  "codePath": "Sprachmodells.ipynb",
+  "git": {
+    "remote": "https://github.com/julienne-mizero/GenerativeAI-Project.git",
+    "commit": "51cd94013017997dede73b3eb8d27761a280f552"
+  },
+  "email": "juliennemizero1@gmail.com",
+  "root": "c:\\Users\\hshakademie7\\Desktop\\INTOCODE WEITERBILDUNG\\Generative_Al_project\\GenerativeAI-Project",
+  "host": "DESKTOP-POT0L14",
+  "executable": "c:\\Users\\hshakademie7\\Desktop\\INTOCODE WEITERBILDUNG\\Generative_Al_project\\.venv\\Scripts\\python.exe",
+  "codePathLocal": "Sprachmodells.ipynb",
+  "cpu_count": 10,
+  "cpu_count_logical": 12,
+  "disk": {
+    "/": {
+      "total": "509010243584",
+      "used": "194057482240"
+    }
+  },
+  "memory": {
+    "total": "16512606208"
+  },
+  "cpu": {
+    "count": 10,
+    "countLogical": 12
+  }
+}

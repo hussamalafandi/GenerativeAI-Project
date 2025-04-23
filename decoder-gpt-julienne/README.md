@@ -1,2 +1,3 @@
 # Decoder Only GPT by Julienne Mizero
-This is a custom PyTorch autoregressive language model trained on Tiny Shakespeare.
+This repository contains a decoder-only GPT model fine-tuned by Julienne Mizero. The model is designed to be used for various text generation tasks.#Model Description
+The decoder-only GPT model is a generative language model that is based on the transformer architecture. It is fine-tuned on a specific dataset to improve its ability to generate coherent text based on a given prompt.
