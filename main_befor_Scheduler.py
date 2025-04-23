@@ -114,9 +114,7 @@ if __name__ == "__main__":
         wandb.init(project="tiny-language-model", config=config)
         optimizer = torch.optim.Adam(model.parameters(), lr=config["learning_rate"], weight_decay=1e-3)
         criterion = nn.CrossEntropyLoss()
-        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=1, verbose=True)
 
-        # 🏋️ Тренировка
         for epoch in range(config["epochs"]):
             model.train()
             train_loss = 0
@@ -141,16 +139,7 @@ if __name__ == "__main__":
                     val_loss += loss.item()
             val_loss /= len(val_loader)
 
-            # 💡 Шаг SCHEDULER-а
-            scheduler.step(val_loss)
-
-            # 📊 wandb лог
-            wandb.log({
-                "train_loss": train_loss,
-                "val_loss": val_loss,
-                "learning_rate": optimizer.param_groups[0]["lr"]
-            })
-
+            wandb.log({"train_loss": train_loss, "val_loss": val_loss})
             print(f"[{epoch+1}/{config['epochs']}] Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f}")
 
         torch.save(model.state_dict(), model_path)
