@@ -8,21 +8,16 @@ from tqdm import tqdm
 import wandb
 import requests
 import os
-import torch.nn.functional as F
-import random
 
 # ⚙️ Конфигурация
 config = {
     "model_name": "MyTinyDecoder",
-    "epochs": 3,
+    "epochs": 5,
     "batch_size": 64,
     "learning_rate": 1e-3,
-    "block_size": 256,
+    "block_size": 64,
     "device": "cuda" if torch.cuda.is_available() else "cpu"
 }
-
-print("Using device:", config["device"])
-print("CUDA available:", torch.cuda.is_available())
 
 # 📥 Шаг 1: Загрузка Tiny Shakespeare
 url = "https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt"
@@ -63,7 +58,7 @@ class TinyDecoder(nn.Module):
     def __init__(self, vocab_size, d_model=64, n_heads=2, n_layers=2):
         super().__init__()
         self.embedding = nn.Embedding(vocab_size, d_model)
-        self.dropout = nn.Dropout(0.2)
+        self.dropout = nn.Dropout(0.1)
         decoder_layer = nn.TransformerDecoderLayer(d_model=d_model, nhead=n_heads)
         self.decoder = nn.TransformerDecoder(decoder_layer, num_layers=n_layers)
         self.linear = nn.Linear(d_model, vocab_size)
@@ -78,26 +73,18 @@ class TinyDecoder(nn.Module):
         return self.linear(out)
 
 # 🧠 Генерация текста
-def generate_text(model, tokenizer, prompt, max_new_tokens=50, temperature=1.0, top_k=50):
+def generate_text(model, tokenizer, prompt, max_new_tokens=50):
     model.eval()
     input_ids = tokenizer(prompt, return_tensors="pt")["input_ids"].to(config["device"])
 
     for _ in range(max_new_tokens):
         with torch.no_grad():
             outputs = model(input_ids)
-            next_token_logits = outputs[:, -1, :] / temperature  # 🔥 temp scaling
-
-            # 🔽 top_k sampling
-            top_k_logits, top_k_indices = torch.topk(next_token_logits, top_k)
-            probs = F.softmax(top_k_logits, dim=-1)
-            next_token = top_k_indices[0, torch.multinomial(probs, num_samples=1).item()]
-
-        next_token = next_token.unsqueeze(0).unsqueeze(0)  # → [1, 1]
+            next_token_logits = outputs[:, -1, :]
+            next_token = torch.argmax(next_token_logits, dim=-1).unsqueeze(0)
         input_ids = torch.cat([input_ids, next_token], dim=1)
 
-    generated_text = tokenizer.decode(input_ids[0], skip_special_tokens=True)
-    return generated_text
-
+    return tokenizer.decode(input_ids[0], skip_special_tokens=True)
 
 # 🚦 Основной запуск
 if __name__ == "__main__":
