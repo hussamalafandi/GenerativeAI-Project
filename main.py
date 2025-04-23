@@ -15,14 +15,18 @@ import random
 config = {
     "model_name": "MyTinyDecoder",
     "epochs": 3,
-    "batch_size": 64,
+    "batch_size": 32,
     "learning_rate": 1e-3,
     "block_size": 256,
     "device": "cuda" if torch.cuda.is_available() else "cpu"
 }
 
+print("CUDA available:", torch.cuda.is_available())
+print("Device:", torch.cuda.get_device_name(0) if torch.cuda.is_available() else "CPU")
 print("Using device:", config["device"])
 print("CUDA available:", torch.cuda.is_available())
+
+torch.cuda.empty_cache()
 
 # 📥 Шаг 1: Загрузка Tiny Shakespeare
 url = "https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt"
@@ -63,7 +67,7 @@ class TinyDecoder(nn.Module):
     def __init__(self, vocab_size, d_model=64, n_heads=2, n_layers=2):
         super().__init__()
         self.embedding = nn.Embedding(vocab_size, d_model)
-        self.dropout = nn.Dropout(0.2)
+        self.dropout = nn.Dropout(0.3)
         decoder_layer = nn.TransformerDecoderLayer(d_model=d_model, nhead=n_heads)
         self.decoder = nn.TransformerDecoder(decoder_layer, num_layers=n_layers)
         self.linear = nn.Linear(d_model, vocab_size)
@@ -108,7 +112,7 @@ if __name__ == "__main__":
 
     if mode == "train":
         wandb.init(project="tiny-language-model", config=config)
-        optimizer = torch.optim.Adam(model.parameters(), lr=config["learning_rate"])
+        optimizer = torch.optim.Adam(model.parameters(), lr=config["learning_rate"], weight_decay=1e-3)
         criterion = nn.CrossEntropyLoss()
 
         for epoch in range(config["epochs"]):
