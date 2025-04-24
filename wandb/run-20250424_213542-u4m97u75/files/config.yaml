@@ -1,0 +1,54 @@
+_wandb:
+    value:
+        cli_version: 0.19.9
+        m: []
+        python_version: 3.12.8
+        t:
+            "1":
+                - 1
+                - 5
+                - 11
+                - 49
+                - 51
+                - 53
+                - 55
+            "2":
+                - 1
+                - 5
+                - 11
+                - 49
+                - 51
+                - 53
+                - 55
+            "3":
+                - 2
+                - 16
+                - 23
+                - 55
+            "4": 3.12.8
+            "5": 0.19.9
+            "6": 4.51.2
+            "8":
+                - 1
+                - 3
+                - 5
+            "12": 0.19.9
+            "13": windows-amd64
+batch_size:
+    value: 128
+d_ff:
+    value: 512
+dataset:
+    value: tiny_shakespeare
+epochs:
+    value: 10
+lr:
+    value: 0.003
+max_len:
+    value: 128
+num_layers:
+    value: 2
+seq_len:
+    value: 64
+vocab_size:
+    value: 50257
