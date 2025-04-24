@@ -1,232 +1,223 @@
 # 📦 Импорты 
+
 import torch
 import torch.nn as nn
-from torch.utils.data import Dataset, DataLoader
-from transformers import GPT2Tokenizer
-from sklearn.model_selection import train_test_split
-from tqdm import tqdm
+import torch.nn.functional as F
+from torch import optim
+from torch.optim.lr_scheduler import ReduceLROnPlateau
+from torch.utils.data import Dataset, DataLoader, random_split
+from transformers import AutoTokenizer
 import wandb
 import requests
-import os
-import torch.nn.functional as F
-import random
-from datasets import load_dataset
+import gc
 
-# ⚙️ Конфигурация
-config = {
-    "model_name": "MyTinyDecoder",
-    "epochs": 2,
-    "batch_size": 32,
-    "learning_rate": 1e-3,
-    "block_size": 256,
-    "device": "cuda" if torch.cuda.is_available() else "cpu"
-}
+# ========== Глобальные параметры ==========
+# MAX_SEQ_LEN — максимальная длина, которую модель может обработать
+# BLOCK_SIZE — размер входа для обучения: MAX_SEQ_LEN + 1
+MAX_SEQ_LEN = 128
+BLOCK_SIZE = MAX_SEQ_LEN + 1
 
-print("CUDA available:", torch.cuda.is_available())
-print("Device:", torch.cuda.get_device_name(0) if torch.cuda.is_available() else "CPU")
-print("Using device:", config["device"])
-print("CUDA available:", torch.cuda.is_available())
+def clear_gpu_memory():
+    gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+        torch.cuda.ipc_collect()
 
-torch.cuda.empty_cache()
+# ========== 1. Архитектура модели ==========
+class MyDecoderModel(nn.Module):
+    def __init__(self, vocab_size, d_model=256, nhead=4, num_layers=4, dim_feedforward=512, dropout=0.1, max_seq_len=128):
+        super().__init__()
+        self.token_embedding = nn.Embedding(vocab_size, d_model)
+        self.position_embedding = nn.Embedding(max_seq_len, d_model)
+        decoder_layer = nn.TransformerDecoderLayer(d_model, nhead, dim_feedforward, dropout, activation='gelu')
+        self.decoder = nn.TransformerDecoder(decoder_layer, num_layers=num_layers)
+        self.output_projection = nn.Linear(d_model, vocab_size)
 
-# Загружаем датасет
-dataset = load_dataset("Trelis/tiny-shakespeare")
+    def forward(self, input_ids, attention_mask=None):
+        batch_size, seq_len = input_ids.size()
+        positions = torch.arange(0, seq_len, device=input_ids.device).unsqueeze(0).expand(batch_size, seq_len)
+        x = self.token_embedding(input_ids) + self.position_embedding(positions)
+        tgt_mask = torch.triu(torch.ones(seq_len, seq_len, device=input_ids.device) * float('-inf'), diagonal=1)
+        tgt_key_padding_mask = (attention_mask == 0) if attention_mask is not None else None
+        # Создаём фиктивный memory (нулевой, той же формы)
+        memory = torch.zeros_like(x).transpose(0, 1)
 
-# ✂️ Разделение на train / val
-# Получаем обучающие и валидационные тексты
-train_text = "\n".join(dataset["train"]["Text"])
-val_text = "\n".join(dataset["test"]["Text"])
+        x = self.decoder(
+            tgt=x.transpose(0, 1),
+            memory=memory,
+            tgt_mask=tgt_mask,
+            tgt_key_padding_mask=tgt_key_padding_mask
+        )
+        x = x.transpose(0, 1)
+        return self.output_projection(x)
 
-# 🔠 Шаг 2: Токенизация
-tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
-tokenizer.pad_token = tokenizer.eos_token
-
-train_ids = tokenizer(train_text, return_tensors="pt")["input_ids"].squeeze()[:30000]
-val_ids = tokenizer(val_text, return_tensors="pt")["input_ids"].squeeze()[:1000]
-
-# 📚 Dataset класс
+# ========== 2. Dataset и загрузка ==========
 class TextDataset(Dataset):
-    def __init__(self, data, block_size):
-        self.data = data
-        self.block_size = block_size
+    def __init__(self, input_ids):
+        self.input_ids = input_ids
 
     def __len__(self):
-        return len(self.data) - self.block_size
+        return len(self.input_ids)
 
     def __getitem__(self, idx):
-        x = self.data[idx:idx+self.block_size]
-        y = self.data[idx+1:idx+self.block_size+1]
+        x = self.input_ids[idx][:-1]
+        y = self.input_ids[idx][1:]
         return x, y
 
-train_dataset = TextDataset(train_ids, config["block_size"])
-val_dataset = TextDataset(val_ids, config["block_size"])
-train_loader = DataLoader(train_dataset, batch_size=config["batch_size"], shuffle=True)
-val_loader = DataLoader(val_dataset, batch_size=config["batch_size"])
+def chunk_dataset(input_ids, block_size=129):
+    num_chunks = len(input_ids) // block_size
+    input_ids = input_ids[:num_chunks * block_size]
+    input_ids = input_ids.view(num_chunks, block_size)
+    return input_ids
 
-# 🧠 Шаг 3: Модель — простой decoder
-class TinyDecoder(nn.Module):
-    def __init__(self, vocab_size, d_model=64, n_heads=2, n_layers=2):
-        super().__init__()
-        self.embedding = nn.Embedding(vocab_size, d_model)
-        self.dropout = nn.Dropout(0.3)
-        decoder_layer = nn.TransformerDecoderLayer(d_model=d_model, nhead=n_heads)
-        self.decoder = nn.TransformerDecoder(decoder_layer, num_layers=n_layers)
-        self.linear = nn.Linear(d_model, vocab_size)
-        self.pos_embed = nn.Parameter(torch.zeros(1, config["block_size"], d_model))
+def load_dataset(tokenizer, block_size=129):
+    url = "https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt"
+    text = requests.get(url).text
+    encodings = tokenizer(text, return_tensors="pt", truncation=False, padding=False)
+    input_ids = encodings["input_ids"].squeeze()
+    chunks = chunk_dataset(input_ids, block_size)
+    dataset = TextDataset(chunks)
+    return dataset
 
-
-    def forward(self, x):
-        x = self.embedding(x) + self.pos_embed[:, :x.size(1), :]
-        x = self.dropout(x)
-        x = x.permute(1, 0, 2)
-        tgt_mask = nn.Transformer.generate_square_subsequent_mask(x.size(0)).to(x.device)
-        out = self.decoder(x, x, tgt_mask=tgt_mask)
-        out = out.permute(1, 0, 2)
-        return self.linear(out)
-
-# 🧠 Генерация текста
-def generate_text(model, tokenizer, prompt, max_new_tokens=30, temperature=0.9,     ):
+# ========== 3. Валидация ==========
+def validate(model, val_loader, criterion, device):
     model.eval()
-    input_ids = tokenizer(prompt, return_tensors="pt")["input_ids"].to(config["device"])
+    val_loss = 0
+    with torch.no_grad():
+        for x, y in val_loader:
+            x, y = x.to(device), y.to(device)
+            logits = model(x)
+            loss = criterion(logits.view(-1, logits.size(-1)), y.view(-1))
+            val_loss += loss.item()
+    return val_loss / len(val_loader)
+
+# ========== 4. Обучение ==========
+def train():
+    tokenizer = AutoTokenizer.from_pretrained("gpt2")
+    tokenizer.pad_token = tokenizer.eos_token
+
+    dataset = load_dataset(tokenizer)
+    train_size = int(0.9 * len(dataset))
+    val_size = len(dataset) - train_size
+    train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
+    train_loader = DataLoader(train_dataset, batch_size=8, shuffle=True)
+    val_loader = DataLoader(val_dataset, batch_size=8)
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    
+    model = MyDecoderModel(vocab_size=tokenizer.vocab_size, max_seq_len=MAX_SEQ_LEN).to(device)
+    
+    optimizer = optim.Adam(model.parameters(), lr=3e-4)
+    criterion = nn.CrossEntropyLoss()
+
+    # Добавлен адаптивный scheduler
+    scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=1)
+
+    wandb.init(project="my-language-model")
+    epochs = 15
+
+    for epoch in range(epochs):
+        model.train()
+        total_loss = 0
+
+        for x, y in train_loader:
+            x, y = x.to(device), y.to(device)
+            logits = model(x)
+            loss = criterion(logits.view(-1, logits.size(-1)), y.view(-1))
+
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+            total_loss += loss.item()
+
+        avg_train_loss = total_loss / len(train_loader)
+        avg_val_loss = validate(model, val_loader, criterion, device)
+
+        # Обновление scheduler'а
+        scheduler.step(avg_val_loss)
+
+        current_lr = optimizer.param_groups[0]['lr']
+
+        print(f"Epoch {epoch+1} | Train Loss: {avg_train_loss:.4f} | Val Loss: {avg_val_loss:.4f} | LR: {current_lr:.6f}")
+        wandb.log({
+            "epoch": epoch+1,
+            "train_loss": avg_train_loss,
+            "val_loss": avg_val_loss,
+            "lr": current_lr
+        })
+        # Сохраняем модель для каждой эпохи
+        torch.save(model.state_dict(), f"model_epoch_{epoch+1}.pt")
+        print(f"📦 Модель сохранена: model_epoch_{epoch+1}.pt")
+
+    torch.save(model.state_dict(), "my_model.pt")
+    print("✅ Модель сохранена в my_model.pt")
+
+    clear_gpu_memory()
+
+
+# ========== 5. Генерация ==========
+def sample_logits(logits, temperature=1.0, top_k=0):
+    if temperature != 1.0:
+        logits = logits / temperature
+    if top_k > 0:
+        top_k = min(top_k, logits.size(-1))
+        values, _ = torch.topk(logits, top_k)
+        min_threshold = values[:, -1].unsqueeze(-1)
+        logits[logits < min_threshold] = -float("Inf")
+    probs = F.softmax(logits, dim=-1)
+    return torch.multinomial(probs, num_samples=1)
+
+def generate():
+    tokenizer = AutoTokenizer.from_pretrained("gpt2")
+    tokenizer.pad_token = tokenizer.eos_token
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    # 🔹 Новый ввод: выбор модели
+    model_path = input("Укажите путь к файлу модели (Enter для 'my_model.pt'): ").strip()
+    if model_path == "":
+        model_path = "my_model.pt"
+
+    # Загружаем модель
+    model = MyDecoderModel(
+        vocab_size=tokenizer.vocab_size,
+        max_seq_len=MAX_SEQ_LEN
+    ).to(device)
+    model.load_state_dict(torch.load(model_path, map_location=device))
+    model.eval()
+
+    # Параметры генерации
+    prompt = input("Введите начальный текст: ")
+    temperature = float(input("Температура (например 1.0): ") or "1.0")
+    top_k = int(input("Top-k (0 = без ограничения): ") or "0")
+    max_new_tokens = int(input("Сколько токенов сгенерировать? ") or "50")
+
+    input_ids = tokenizer(prompt, return_tensors="pt")["input_ids"].to(device)
 
     for _ in range(max_new_tokens):
         with torch.no_grad():
-            outputs = model(input_ids)
-            next_token_logits = outputs[:, -1, :] / temperature  # 🔥 temp scaling
+            logits = model(input_ids)
+            next_token_logits = logits[:, -1, :]
+            next_token = sample_logits(next_token_logits, temperature=temperature, top_k=top_k)
+            input_ids = torch.cat([input_ids, next_token], dim=1)
 
-            # 🔽 top_k sampling
-            top_k_logits, top_k_indices = torch.topk(next_token_logits, top_k)
-            probs = F.softmax(top_k_logits, dim=-1)
-            next_token = top_k_indices[0, torch.multinomial(probs, num_samples=1).item()]
+    result = tokenizer.decode(input_ids[0], skip_special_tokens=True)
+    print("\nСгенерированный текст:\n", result)
 
-        next_token = next_token.unsqueeze(0).unsqueeze(0)  # → [1, 1]
-        input_ids = torch.cat([input_ids, next_token], dim=1)
+    # Очистка памяти
+    clear_gpu_memory()
 
-    generated_text = tokenizer.decode(input_ids[0], skip_special_tokens=True)
-    return generated_text
-
-# 🧠 Продвинутая генерация текста
-def generate_text_advanced(model, tokenizer, prompt, max_new_tokens=50, temperature=1.0, top_k=50, top_p=1.0, num_return_sequences=1):
-    model.eval()
-    input_ids = tokenizer(prompt, return_tensors="pt")["input_ids"].to(config["device"])
-    
-    generated_outputs = []
-
-    for _ in range(num_return_sequences):
-        generated = input_ids.clone()
-
-        for _ in range(max_new_tokens):
-            with torch.no_grad():
-                outputs = model(generated)
-                logits = outputs[:, -1, :] / temperature
-
-                # Top-k
-                if top_k > 0:
-                    top_k_values, top_k_indices = torch.topk(logits, top_k)
-                    probs = torch.zeros_like(logits).scatter(1, top_k_indices, top_k_values)
-                else:
-                    probs = logits
-
-                # Softmax + Top-p
-                sorted_logits, sorted_indices = torch.sort(probs, descending=True)
-                cumulative_probs = torch.cumsum(torch.softmax(sorted_logits, dim=-1), dim=-1)
-
-                if top_p < 1.0:
-                    sorted_indices_to_remove = cumulative_probs > top_p
-                    sorted_indices_to_remove[..., 1:] = sorted_indices_to_remove[..., :-1].clone()
-                    sorted_indices_to_remove[..., 0] = 0
-                    sorted_logits[sorted_indices_to_remove] = -float("Inf")
-
-                probs = torch.softmax(sorted_logits, dim=-1)
-                next_token = torch.multinomial(probs, num_samples=1)
-
-                next_token_unsorted = sorted_indices.gather(-1, next_token)
-                generated = torch.cat([generated, next_token_unsorted], dim=1)
-
-        text = tokenizer.decode(generated[0], skip_special_tokens=True)
-        generated_outputs.append(text)
-
-    return generated_outputs
-
-
-# 🚦 Основной запуск
-if __name__ == "__main__":
-    mode = input("\n🤖 Выбери режим: [1] Обучение | [2] Генерация | [3] Продвинутая генерация: ")
-
-    model = TinyDecoder(vocab_size=len(tokenizer)).to(config["device"])
-    model_path = "tiny_decoder.pt"
-
-    if mode == "1":
-        print("🚀 Запуск обучения...")
-        wandb.init(project="tiny-language-model", config=config)
-        optimizer = torch.optim.Adam(model.parameters(), lr=config["learning_rate"], weight_decay=1e-3)
-        criterion = nn.CrossEntropyLoss(label_smoothing=0.05)
-        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=1)
-
-        # 🏋️ Тренировка
-        for epoch in range(config["epochs"]):
-            model.train()
-            train_loss = 0
-            for x, y in tqdm(train_loader, desc=f"Epoch {epoch+1}"):
-                x, y = x.to(config["device"]), y.to(config["device"])
-                optimizer.zero_grad()
-                logits = model(x)
-                loss = criterion(logits.view(-1, logits.size(-1)), y.view(-1))
-                loss.backward()
-                optimizer.step()
-                train_loss += loss.item()
-            train_loss /= len(train_loader)
-
-            # 🔍 Валидация
-            model.eval()
-            val_loss = 0
-            with torch.no_grad():
-                for x, y in val_loader:
-                    x, y = x.to(config["device"]), y.to(config["device"])
-                    logits = model(x)
-                    loss = criterion(logits.view(-1, logits.size(-1)), y.view(-1))
-                    val_loss += loss.item()
-            val_loss /= len(val_loader)
-
-            # 💡 Шаг SCHEDULER-а
-            scheduler.step(val_loss)
-
-            # 📊 wandb лог
-            wandb.log({
-                "train_loss": train_loss,
-                "val_loss": val_loss,
-                "learning_rate": optimizer.param_groups[0]["lr"]
-            })
-
-            print(f"[{epoch+1}/{config['epochs']}] Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f}")
-
-        torch.save(model.state_dict(), model_path)
-        print("✅ Модель сохранена.")
-        wandb.finish()
-
-    elif mode == "2":
-        prompt = input("Введите начальный текст: ")
-        generated = generate_text(model, tokenizer, prompt, max_new_tokens=50)
-        print("\n🧠 Generated text:\n", generated)
-
-    elif mode == "3":
-        prompt = input("✏️ Введите начальный текст: ")
-        temperature = float(input("🔥 Temperature (напр. 1.0): ") or 1.0)
-        top_k = int(input("🎯 Top-k (напр. 50): ") or 50)
-        top_p = float(input("🔮 Top-p (напр. 0.9): ") or 1.0)
-        num_seq = int(input("📎 Сколько сгенерировать вариантов? (по умолч. 1): ") or 1)
-
-        outputs = generate_text_advanced(
-            model, tokenizer, prompt,
-            max_new_tokens=60,
-            temperature=temperature,
-            top_k=top_k,
-            top_p=top_p,
-            num_return_sequences=num_seq
-        )
-
-        for i, out in enumerate(outputs):
-            print(f"\n🧠 Generated #{i+1}:\n{out}")
-
+# ========== 6. Главное меню ==========
+def main():
+    print("Выберите режим:")
+    print("1 — Обучение модели")
+    print("2 — Генерация текста")
+    choice = input("Ваш выбор (1/2): ")
+    if choice == "1":
+        train()
+    elif choice == "2":
+        generate()
     else:
-        print("⚠️ Неизвестный режим. Завершение.")
+        print("Неверный выбор")
+
+if __name__ == "__main__":
+    main()
