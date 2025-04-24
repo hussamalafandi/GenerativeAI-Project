@@ -10,12 +10,11 @@ import requests
 import os
 import torch.nn.functional as F
 import random
-from datasets import load_dataset
 
 # ⚙️ Конфигурация
 config = {
     "model_name": "MyTinyDecoder",
-    "epochs": 2,
+    "epochs": 5,
     "batch_size": 32,
     "learning_rate": 1e-3,
     "block_size": 256,
@@ -29,20 +28,20 @@ print("CUDA available:", torch.cuda.is_available())
 
 torch.cuda.empty_cache()
 
-# Загружаем датасет
-dataset = load_dataset("Trelis/tiny-shakespeare")
+# 📥 Шаг 1: Загрузка Tiny Shakespeare
+url = "https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt"
+text = requests.get(url).text
 
 # ✂️ Разделение на train / val
-# Получаем обучающие и валидационные тексты
-train_text = "\n".join(dataset["train"]["Text"])
-val_text = "\n".join(dataset["test"]["Text"])
+train_text, val_text = train_test_split(text.split("\n"), test_size=0.1, random_state=42)
+train_text, val_text = "\n".join(train_text), "\n".join(val_text)
 
 # 🔠 Шаг 2: Токенизация
 tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
 tokenizer.pad_token = tokenizer.eos_token
 
-train_ids = tokenizer(train_text, return_tensors="pt")["input_ids"].squeeze()[:30000]
-val_ids = tokenizer(val_text, return_tensors="pt")["input_ids"].squeeze()[:1000]
+train_ids = tokenizer(train_text, return_tensors="pt")["input_ids"].squeeze()[:20000]
+val_ids = tokenizer(val_text, return_tensors="pt")["input_ids"].squeeze()[:5000]
 
 # 📚 Dataset класс
 class TextDataset(Dataset):
@@ -65,18 +64,16 @@ val_loader = DataLoader(val_dataset, batch_size=config["batch_size"])
 
 # 🧠 Шаг 3: Модель — простой decoder
 class TinyDecoder(nn.Module):
-    def __init__(self, vocab_size, d_model=64, n_heads=2, n_layers=2):
+    def __init__(self, vocab_size, d_model=96, n_heads=2, n_layers=3):
         super().__init__()
         self.embedding = nn.Embedding(vocab_size, d_model)
         self.dropout = nn.Dropout(0.3)
         decoder_layer = nn.TransformerDecoderLayer(d_model=d_model, nhead=n_heads)
         self.decoder = nn.TransformerDecoder(decoder_layer, num_layers=n_layers)
         self.linear = nn.Linear(d_model, vocab_size)
-        self.pos_embed = nn.Parameter(torch.zeros(1, config["block_size"], d_model))
-
 
     def forward(self, x):
-        x = self.embedding(x) + self.pos_embed[:, :x.size(1), :]
+        x = self.embedding(x)
         x = self.dropout(x)
         x = x.permute(1, 0, 2)
         tgt_mask = nn.Transformer.generate_square_subsequent_mask(x.size(0)).to(x.device)
