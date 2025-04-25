@@ -1,3 +1,10 @@
+# Link zu Hugging Face
+https://huggingface.co/WenWebProjekt/mini-decoder/tree/main
+
+# Link zu wandb
+https://wandb.ai/wenwenhandy-hochschule-hannover/tiny-transformer/runs/iyggw8c7/workspace?nw=nwuserwenwenhandy
+
+
 # Mini Decoder GPT
 
 This is a simple language model (Decoder-only) built with PyTorch. The training data is "Tiny Shakespeare", using the GPT2 tokenizer.
