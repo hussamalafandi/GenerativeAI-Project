@@ -38,8 +38,8 @@ Trained using Google Colab with GPU acceleration.
 The model was evaluated on the validation split of Wikitext-2. Validation loss and training loss are tracked via [Weights & Biases](https://wandb.ai/).
 Tracking run with wandb version 0.19.9
 Run data is saved locally in /content/wandb/run-20250423_174822-b23nfssf
-View project at https://wandb.ai/tet-sydorenko-private_account/my-transformer-lm
-View run at https://wandb.ai/tet-sydorenko-private_account/my-transformer-lm/runs/b23nfssf
+View project at (https://wandb.ai/tet-sydorenko-private_account/my-transformer-lm)
+View run at (https://wandb.ai/tet-sydorenko-private_account/my-transformer-lm/runs/b23nfssf)
 
 📎 Files Included
 
@@ -92,7 +92,7 @@ This model is for educational and research purposes. It is not fine-tuned for pr
 ✍️ Author
 Developed by: [Tetiana Sydorenko]
 
-Project GitHub: (to be added)
+Project HuggingFace: (https://huggingface.co/tetsydorenko/my-transformer-lm)
 
 
 # 🧠 Abschlussprojekt: Entwicklung eines eigenen Sprachmodells
