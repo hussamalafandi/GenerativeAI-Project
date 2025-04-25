@@ -36,7 +36,7 @@ Willkommen zum Abschlussprojekt dieses Kurses! In diesem Projekt setzt du dein W
 - Forke dieses Repository.
 - Erstelle einen Branch mit deinem Namen, z. B. `max-mustermann-final`.
 - Füge deine `.py`-Datei oder dein Jupyter-Notebook sowie eine `README.md` hinzu.
-- Erstelle einen Pull Request **bis spätestens 23:59 Uhr am 25.04.2025**.
+- Erstelle einen Pull Request **bis spätestens 23:59 Uhr am 27.04.2025**.
 
 ---
 
