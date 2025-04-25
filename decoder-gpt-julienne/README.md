@@ -1,3 +1,3 @@
 # Decoder Only GPT by Julienne Mizero
 This repository contains a decoder-only GPT model fine-tuned by Julienne Mizero. The model is designed to be used for various text generation tasks.#Model Description
-The decoder-only GPT model is a generative language model that is based on the transformer architecture. It is fine-tuned on a specific dataset to improve its ability to generate coherent text based on a given prompt.
+The decoder-only GPT model is a generative language model that is based on the transformer architecture. It is fine-tuned on a specific dataset to improve its ability to generate coherent text based on a given prompt.https://huggingface.co/JulienneMizero/decoder-gpt-julienne https://wandb.ai/juliennemizero1-hsh/tiny-shakespeare-decoder-only/runs/sqys5sbv
