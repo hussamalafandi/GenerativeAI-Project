@@ -131,7 +131,7 @@ repo_id = "okansav/sprachmodell-final"
 
 # Modellkarte
 model_card = """
----
+----
 tags:
 - pytorch
 - transformer
