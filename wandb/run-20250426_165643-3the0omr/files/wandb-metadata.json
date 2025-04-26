@@ -1,0 +1,31 @@
+{
+  "os": "Windows-11-10.0.26100-SP0",
+  "python": "CPython 3.13.3",
+  "startedAt": "2025-04-26T14:56:43.251974Z",
+  "program": "c:\\Users\\admin\\Desktop\\AI_Project\\GenerativeAI-Project\\languagemodel",
+  "codePath": "languagemodel",
+  "git": {
+    "remote": "https://github.com/okansavas/GenerativeAI-Project.git",
+    "commit": "88f9ed42d822196ccbfb422ec936ce6a6cc35b99"
+  },
+  "email": "okansav@gmail.com",
+  "root": "C:\\Users\\admin\\Desktop\\AI_Project\\GenerativeAI-Project",
+  "host": "DESKTOP-R68A6V8",
+  "executable": "C:\\Users\\admin\\python.exe",
+  "codePathLocal": "languagemodel",
+  "cpu_count": 10,
+  "cpu_count_logical": 12,
+  "disk": {
+    "/": {
+      "total": "509010243584",
+      "used": "172360433664"
+    }
+  },
+  "memory": {
+    "total": "16512606208"
+  },
+  "cpu": {
+    "count": 10,
+    "countLogical": 12
+  }
+}
