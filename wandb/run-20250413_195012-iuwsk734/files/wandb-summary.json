@@ -1,0 +1,1 @@
+{"_timestamp":1.7445671626526191e+09,"_runtime":550.290529,"_step":4,"_wandb":{"runtime":550},"epoch":5,"train_loss":6.5959019978841145,"val_loss":7.047537803649902,"generated_text":{"_type":"html-file","sha256":"d1aa9e4d58a74fc697a69df49ef43dc30d492e01fa61b5fd6f3f09b0fee8f337","size":249,"path":"media/html/generated_text_4_d1aa9e4d58a74fc697a6.html"}}

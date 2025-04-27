@@ -1,0 +1,31 @@
+{
+  "os": "Windows-10-10.0.19045-SP0",
+  "python": "CPython 3.10.16",
+  "startedAt": "2025-04-13T17:50:12.363347Z",
+  "program": "c:\\Users\\volodymyr\\python\\maschinlerning\\GenerativeAI-Project\\Generative_KI_abschlussprojekt_Kyryliuk.ipynb",
+  "codePath": "Generative_KI_abschlussprojekt_Kyryliuk.ipynb",
+  "git": {
+    "remote": "https://github.com/vladimir707/GenerativeAI-Project",
+    "commit": "d9130d2c40c1301d834e6f8a68042d92c2c607f5"
+  },
+  "email": "vovanew707@gmail.com",
+  "root": "c:\\Users\\volodymyr\\python\\maschinlerning\\GenerativeAI-Project",
+  "host": "DESKTOP-8JQ3GRL",
+  "executable": "c:\\Users\\volodymyr\\AppData\\Local\\anaconda3\\envs\\neuro_env\\python.exe",
+  "codePathLocal": "Generative_KI_abschlussprojekt_Kyryliuk.ipynb",
+  "cpu_count": 2,
+  "cpu_count_logical": 4,
+  "disk": {
+    "/": {
+      "total": "111093477376",
+      "used": "92100788224"
+    }
+  },
+  "memory": {
+    "total": "8436588544"
+  },
+  "cpu": {
+    "count": 2,
+    "countLogical": 4
+  }
+}

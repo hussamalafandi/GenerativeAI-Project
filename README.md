@@ -59,3 +59,35 @@ Wenn du möchtest, kannst du zusätzlich ein vortrainiertes Modell wie GPT-2 mit
 ---
 
 Viel Erfolg! 🚀
+
+
+Ergebnisse
+
+Ein kompakter, autoregressiver Transformer (GPT‑Stil), finetuned auf dem **Tiny‑Shakespeare**‑Datensatz.  
+Trainiert in 5 Epochen mit wandb‑Logging.
+
+## Modell‑Links
+* 🤗 **Hugging Face Hub**: 	https://huggingface.co/vladimir707/gpt-mini1
+Bonusaufgabe 			https://huggingface.co/vladimir707/my-fancy-gpt2
+* 📊 **Weights & Biases Run**: 	https://wandb.ai/vovanew707-hsh/tiny-gpt?nw=nwuservovanew707
+* 📊 **W&B Projektübersicht**: 	https://wandb.ai/vovanew707-hsh/tiny-gpt/runs/5juy23aa?nw=nwuservovanew707
+
+## Architektur
+| Hyperparameter | Wert |
+|----------------|------|
+| Typ            | Decoder‑only Transformer |
+| Ebenen         | 2 |
+| Heads          | 4 |
+| Embedding‑Dim  | 128 |
+| FF‑Dim         | 256 |
+| Parameter      | < 1 M |
+
+## Trainingsdetails
+* Optimizer & LR: **AdamW**, 3e‑4  
+* Batch‑Größe: 4  
+* Epochen: 5  
+* Loss‑Funktion: Cross‑Entropy (language‑modeling)  
+* WandB‑Run: siehe Link oben (Train/Val‑Loss, Beispiele, Generierungen)
+
+## Beispiel – Textgenerierung
+
