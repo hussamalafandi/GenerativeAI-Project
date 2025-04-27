@@ -87,3 +87,6 @@ Acknowledgments
 Inspired by OpenAI's GPT architecture and Hugging Face Transformers.
 
 Thanks for reviewing this model! 🚀
+
+To download the python model code, follow the link
+https://raw.githubusercontent.com/Vadim-F/GenerativeAI-Project/refs/heads/Vadym/main.py
