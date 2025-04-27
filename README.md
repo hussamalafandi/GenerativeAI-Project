@@ -1,61 +1,51 @@
-# 🧠 Abschlussprojekt: Entwicklung eines eigenen Sprachmodells
+# Abschlussprojekt: Entwicklung eines eigenen Sprachmodells
 
-Willkommen zum Abschlussprojekt dieses Kurses! In diesem Projekt setzt du dein Wissen über Sprachmodelle in die Praxis um und entwickelst dein eigenes autoregressives Modell auf Basis von PyTorch. Zusätzlich lernst du Tools wie Weights & Biases (wandb) und den Hugging Face Model Hub kennen – genau wie im echten ML-Workflow.
+#### Autor: Santiago1712
+#### Datum: 25.04.2025
 
----
+## Projektbeschreibung
 
-## ✅ Projektanforderungen
+Dieses Projekt umfasst die Entwicklung eines autoregressiven Decoder-only-Sprachmodells unter Verwendung von PyTorch. Das Modell wurde auf dem Tiny Shakespeare-Datensatz trainiert und basiert auf der Transformer-Architektur, wobei die Schichten `nn.TransformerDecoderLayer` und `nn.TransformerDecoder` von PyTorch verwendet wurden. Das Hauptziel war die Implementierung eines funktionsfähigen Modells, das lernen konnte, Text mit einer ähnlichen Struktur wie der des Trainingsdatensatzes zu generieren und die Anforderungen des Kurses zu erfüllen.
 
-### 1. Modell
-- Erstelle ein **Decoder-only Sprachmodell** mit Modulen aus `torch.nn`.
-- Du darfst z. B. `nn.TransformerDecoder`, `nn.TransformerDecoderLayer` usw. verwenden.
-- Das Modell soll autoregressiv funktionieren (wie GPT).
+## Modell
 
-### 2. Tokenizer
-- Verwende einen Tokenizer aus der Hugging Face `transformers`-Bibliothek.
-- Beispiel: `AutoTokenizer` oder `GPT2Tokenizer`.
+* **Architektur:** Decoder-only Transformer
+* **Implementierung:** Unter Verwendung von Modulen aus `torch.nn` (`nn.TransformerDecoder`, `nn.TransformerDecoderLayer`).
+* **Schlüsselparameter:**
+    * `embed_size`: 8
+    * `num_layers`: 1
+    * `heads`: 1
+    * `dropout`: 0.1
+    * `forward_expansion`: 1
+    * `max_len`: 128
+* Hugging Face Model Hub: (https://huggingface.co/Santiago1712/Modell_TinySchakespeare)
 
-### 3. Training
-- Trainiere dein Modell für mindestens **3 Epochen** (5 empfohlen).
-- Nutze einen kleinen Datensatz wie **Tiny Shakespeare**, **WikiText-2** oder einen eigenen.
-- Dein Modell sollte auch auf einer CPU trainierbar sein (< 1 Mio Parameter).
-- Schreibe den Trainingsloop komplett selbst in PyTorch (kein `Trainer` verwenden).
+## Tokenizer
 
-### 4. Evaluation
-- Berechne nach jeder Epoche den Loss auf einem Validierungsdatensatz.
-- Der Loss muss während des Trainings **sichtbar sinken**.
+Verwendet: `GPT2Tokenizer` aus der `transformers`-Bibliothek von Hugging Face.
 
-### 5. Logging
-- Verwende [wandb](https://wandb.ai), um Trainings- und Eval-Loss zu loggen.
+## Training
 
-### 6. Veröffentlichung
-- Lade dein Modell am Ende auf den [Hugging Face Model Hub](https://huggingface.co/).
-- Füge eine kurze Model Card mit Beschreibung und Tags hinzu.
+* Datensatz: Tiny Shakespeare
+* Anzahl der Epochen: 5
+* Finaler Trainingsverlust: 4.96
+* Finaler Validierungsverlust: 4.76
+* Trainingsschleife: Vollständig in PyTorch implementiert (ohne Verwendung der `Trainer`-Klasse von Hugging Face).
+* Logging: `wandb` wurde zur Verfolgung der Trainings- und Validierungsverluste verwendet.
 
-### 7. Abgabe
-- Forke dieses Repository.
-- Erstelle einen Branch mit deinem Namen, z. B. `max-mustermann-final`.
-- Füge deine `.py`-Datei oder dein Jupyter-Notebook sowie eine `README.md` hinzu.
-- Erstelle einen Pull Request **bis spätestens 23:59 Uhr am 25.04.2025**.
+## Evaluation
 
----
+* Der Verlust wurde nach jeder Epoche auf einem Validierungsdatensatz berechnet, wobei während des Trainings eine sichtbare Abnahme zu beobachten war.
+* Eine qualitative Bewertung wurde durch die Generierung von Beispieltext durchgeführt (die Ergebnisse können aufgrund der begrenzten Modellgröße variieren).
 
-## 🌟 Bonus (optional)
+## Wie man den Code ausführt
 
-Wenn du möchtest, kannst du zusätzlich ein vortrainiertes Modell wie GPT-2 mithilfe der Hugging Face `transformers`-Bibliothek finetunen:
+1.  Stelle sicher, dass du die erforderlichen Bibliotheken installiert hast: `torch`, `torch.nn`, `transformers`, `requests`, `tqdm`, `wandb`. Du kannst sie mit `pip install torch transformers requests tqdm wandb` installieren.
+2.  Lade das Notebook (`.ipynb`) oder das Python-Skript (`.py`) aus diesem Repository herunter.
+3.  Führe das Notebook oder das Skript in einer Python-Umgebung aus. Der Code lädt den Datensatz herunter, lädt den Tokenizer, definiert und trainiert das Modell und versucht schließlich, das Modell zum Hugging Face Hub hochzuladen (erfordert die Authentifizierung mit deinem Token).
 
-- Lade ein GPT-2-Modell und den passenden Tokenizer (`GPT2Tokenizer`) mit `from_pretrained`.
-- Trainiere es auf deinem Datensatz mit der `Trainer` API.
-- Logge mit wandb und lade auch dieses Modell auf Hugging Face hoch.
+## Zusätzliche Hinweise
 
----
+* Die Größe des Modells wurde klein gehalten (< 1 Million Parameter), um das Training auf der CPU zu ermöglichen.
+* Die Qualität des generierten Textes kann aufgrund der reduzierten Modellgröße und der Anzahl der Trainingsepochen begrenzt sein. Das Hauptziel war die Demonstration der Implementierung eines autoregressiven Sprachmodells unter Verwendung der erforderlichen Werkzeuge.
 
-## 📝 Wichtige Hinweise
-
-- Logging mit wandb, das Hochladen auf den Hugging Face Hub und der Pull Request auf GitHub sind **Pflicht**.
-- Die Modellqualität ist nicht entscheidend, aber **der Loss muss sinken**.
-- Du wirst am **Montag, den 28.04.2025** dein Projekt präsentieren und deinen Code erklären.
-
----
-
-Viel Erfolg! 🚀
