@@ -144,8 +144,6 @@ After analyzing the final training runs:
 - Inspired by HuggingFace Transformers library.
 - Special thanks to the guidance during experiments and optimization process.
 
-## Hugging Face Model
-https://huggingface.co/VadimHammer/my_shakespeare_model
 ---
 
 # 🚀 Good Luck and Happy Deploying!
