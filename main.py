@@ -10,22 +10,32 @@ from transformers import AutoTokenizer
 import wandb
 import requests
 import gc
+import os
 
-# ========== Глобальные параметры ==========
+# ========== 🔹 Global Parameters / Глобальные параметры ========== #
 # MAX_SEQ_LEN — максимальная длина, которую модель может обработать
 # BLOCK_SIZE — размер входа для обучения: MAX_SEQ_LEN + 1
 MAX_SEQ_LEN = 128
 BLOCK_SIZE = MAX_SEQ_LEN + 1
 
 def clear_gpu_memory():
+    # Clear GPU memory / Очистка памяти видеокарты
     gc.collect()
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
         torch.cuda.ipc_collect()
 
-# ========== 1. Архитектура модели ==========
+#    {"MAX_SEQ_LEN": 256, "d_model": 384, "nhead": 8, "num_layers": 8, "dim_feedforward": 2048, "dropout": 0.1, "learning_rate": 3e-4},
+#    {"MAX_SEQ_LEN": 256, "d_model": 512, "nhead": 8, "num_layers": 8, "dim_feedforward": 2048, "dropout": 0.1, "learning_rate": 3e-4},
+#    {"MAX_SEQ_LEN": 320, "d_model": 256, "nhead": 8, "num_layers": 8, "dim_feedforward": 2048, "dropout": 0.1, "learning_rate": 3e-4},
+#    {"MAX_SEQ_LEN": 256, "d_model": 256, "nhead": 8, "num_layers": 8, "dim_feedforward": 2048, "dropout": 0.05, "learning_rate": 3e-4},
+#    {"MAX_SEQ_LEN": 256, "d_model": 256, "nhead": 8, "num_layers": 8, "dim_feedforward": 2560, "dropout": 0.1, "learning_rate": 3e-4},
+#    {"MAX_SEQ_LEN": 256, "d_model": 256, "nhead": 8, "num_layers": 12, "dim_feedforward": 2048, "dropout": 0.1, "learning_rate": 3e-4},
+#    {"MAX_SEQ_LEN": 256, "d_model": 384, "nhead": 8, "num_layers": 8, "dim_feedforward": 2560, "dropout": 0.1, "learning_rate": 3e-4},
+
+# ========== 🔹 Model Definition / Определение модели ========== #
 class MyDecoderModel(nn.Module):
-    def __init__(self, vocab_size, d_model=256, nhead=4, num_layers=4, dim_feedforward=512, dropout=0.1, max_seq_len=128):
+    def __init__(self, vocab_size, d_model=384, nhead=8, num_layers=8, dim_feedforward=2048, dropout=0.05, max_seq_len=128):
         super().__init__()
         self.token_embedding = nn.Embedding(vocab_size, d_model)
         self.position_embedding = nn.Embedding(max_seq_len, d_model)
@@ -41,17 +51,11 @@ class MyDecoderModel(nn.Module):
         tgt_key_padding_mask = (attention_mask == 0) if attention_mask is not None else None
         # Создаём фиктивный memory (нулевой, той же формы)
         memory = torch.zeros_like(x).transpose(0, 1)
-
-        x = self.decoder(
-            tgt=x.transpose(0, 1),
-            memory=memory,
-            tgt_mask=tgt_mask,
-            tgt_key_padding_mask=tgt_key_padding_mask
-        )
+        x = self.decoder(tgt=x.transpose(0, 1), memory=memory, tgt_mask=tgt_mask, tgt_key_padding_mask=tgt_key_padding_mask)
         x = x.transpose(0, 1)
         return self.output_projection(x)
 
-# ========== 2. Dataset и загрузка ==========
+# ========== 🔹 Dataset Preparation / Подготовка датасета ========== #
 class TextDataset(Dataset):
     def __init__(self, input_ids):
         self.input_ids = input_ids
@@ -79,7 +83,7 @@ def load_dataset(tokenizer, block_size=129):
     dataset = TextDataset(chunks)
     return dataset
 
-# ========== 3. Валидация ==========
+# ========== 🔹 Validation / Валидация ========== #
 def validate(model, val_loader, criterion, device):
     model.eval()
     val_loss = 0
@@ -91,8 +95,23 @@ def validate(model, val_loader, criterion, device):
             val_loss += loss.item()
     return val_loss / len(val_loader)
 
-# ========== 4. Обучение ==========
+# ========== 🔹 Training / Обучение ========== #
 def train():
+    # Ask for training parameters / Запрос параметров обучения
+    global MAX_SEQ_LEN, BLOCK_SIZE
+    print("\nTraining Parameters Setup")
+    max_seq_len_input = input(f"Enter MAX_SEQ_LEN (default {MAX_SEQ_LEN}): ")
+    if max_seq_len_input:
+        MAX_SEQ_LEN = int(max_seq_len_input)
+        BLOCK_SIZE = MAX_SEQ_LEN + 1
+
+    d_model = int(input("Enter d_model (default 256): ") or 256)
+    nhead = int(input("Enter nhead (default 4): ") or 4)
+    num_layers = int(input("Enter num_layers (default 4): ") or 4)
+    dim_feedforward = int(input("Enter dim_feedforward (default 512): ") or 512)
+    dropout = float(input("Enter dropout (default 0.1): ") or 0.1)
+    learning_rate = float(input("Enter learning rate (default 3e-4): ") or 3e-4)
+
     tokenizer = AutoTokenizer.from_pretrained("gpt2")
     tokenizer.pad_token = tokenizer.eos_token
 
@@ -104,17 +123,24 @@ def train():
     val_loader = DataLoader(val_dataset, batch_size=8)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    
-    model = MyDecoderModel(vocab_size=tokenizer.vocab_size, max_seq_len=MAX_SEQ_LEN).to(device)
-    
-    optimizer = optim.Adam(model.parameters(), lr=3e-4)
-    criterion = nn.CrossEntropyLoss()
+    model = MyDecoderModel(
+        vocab_size=tokenizer.vocab_size,
+        d_model=d_model,
+        nhead=nhead,
+        num_layers=num_layers,
+        dim_feedforward=dim_feedforward,
+        dropout=dropout,
+        max_seq_len=MAX_SEQ_LEN
+    ).to(device)
 
-    # Добавлен адаптивный scheduler
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+    criterion = nn.CrossEntropyLoss()
     scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=1)
 
     wandb.init(project="my-language-model")
-    epochs = 15
+    epochs = int(input("Enter number of epochs (default 5): ") or 5)
+
+    log_text = []
 
     for epoch in range(epochs):
         model.train()
@@ -132,30 +158,27 @@ def train():
 
         avg_train_loss = total_loss / len(train_loader)
         avg_val_loss = validate(model, val_loader, criterion, device)
-
-        # Обновление scheduler'а
         scheduler.step(avg_val_loss)
-
         current_lr = optimizer.param_groups[0]['lr']
 
         print(f"Epoch {epoch+1} | Train Loss: {avg_train_loss:.4f} | Val Loss: {avg_val_loss:.4f} | LR: {current_lr:.6f}")
-        wandb.log({
-            "epoch": epoch+1,
-            "train_loss": avg_train_loss,
-            "val_loss": avg_val_loss,
-            "lr": current_lr
-        })
+        wandb.log({"epoch": epoch+1, "train_loss": avg_train_loss, "val_loss": avg_val_loss, "lr": current_lr})
+
+        log_text.append(f"Epoch {epoch+1} | Train Loss: {avg_train_loss:.4f} | Val Loss: {avg_val_loss:.4f} | LR: {current_lr:.6f}\n")
+
         # Сохраняем модель для каждой эпохи
-        # torch.save(model.state_dict(), f"model_epoch_{epoch+1}.pt")
-        # print(f"📦 Модель сохранена: model_epoch_{epoch+1}.pt")
+        torch.save(model.state_dict(), f"model_epoch_{epoch+1}.pt")
+        print(f"📦 Модель сохранена: model_epoch_{epoch+1}.pt")
 
     torch.save(model.state_dict(), "my_model.pt")
-    print("✅ Модель сохранена в my_model.pt")
+    print("✅ Model saved to my_model.pt")
+
+    with open(os.path.join("wandb", "training_log.txt"), "w") as f:
+        f.writelines(log_text)
 
     clear_gpu_memory()
 
-
-# ========== 5. Генерация ==========
+# ========== 🔹 Text Generation / Генерация текста ========== #
 def sample_logits(logits, temperature=1.0, top_k=0):
     if temperature != 1.0:
         logits = logits / temperature
@@ -172,12 +195,10 @@ def generate():
     tokenizer.pad_token = tokenizer.eos_token
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    # 🔹 Новый ввод: выбор модели
-    model_path = input("Укажите путь к файлу модели (Enter для 'my_model.pt'): ").strip()
+    model_path = input("Enter model path (default: my_model.pt): ").strip()
     if model_path == "":
         model_path = "my_model.pt"
 
-    # Загружаем модель
     model = MyDecoderModel(
         vocab_size=tokenizer.vocab_size,
         max_seq_len=MAX_SEQ_LEN
@@ -185,39 +206,43 @@ def generate():
     model.load_state_dict(torch.load(model_path, map_location=device))
     model.eval()
 
-    # Параметры генерации
-    prompt = input("Введите начальный текст: ")
-    temperature = float(input("Температура (например 1.0): ") or "1.0")
-    top_k = int(input("Top-k (0 = без ограничения): ") or "0")
-    max_new_tokens = int(input("Сколько токенов сгенерировать? ") or "50")
+    while True:
+        prompt = input("Enter the prompt text: ")
+        temperature = float(input("Temperature (e.g., 1.0): ") or 1.0)
+        top_k = int(input("Top-k (0 = no limit): ") or 0)
+        max_new_tokens = int(input("How many tokens to generate? (default 50): ") or 50)
 
-    input_ids = tokenizer(prompt, return_tensors="pt")["input_ids"].to(device)
+        input_ids = tokenizer(prompt, return_tensors="pt").input_ids.to(device)
 
-    for _ in range(max_new_tokens):
-        with torch.no_grad():
-            logits = model(input_ids)
-            next_token_logits = logits[:, -1, :]
-            next_token = sample_logits(next_token_logits, temperature=temperature, top_k=top_k)
-            input_ids = torch.cat([input_ids, next_token], dim=1)
+        for _ in range(max_new_tokens):
+            with torch.no_grad():
+                logits = model(input_ids)
+                next_token_logits = logits[:, -1, :]
+                next_token = sample_logits(next_token_logits, temperature=temperature, top_k=top_k)
+                input_ids = torch.cat([input_ids, next_token], dim=1)
 
-    result = tokenizer.decode(input_ids[0], skip_special_tokens=True)
-    print("\nСгенерированный текст:\n", result)
+        generated_text = tokenizer.decode(input_ids[0], skip_special_tokens=True)
+        print("\nGenerated text:\n", generated_text)
 
-    # Очистка памяти
+        again = input("\nGenerate another? (y/n): ")
+        if again.lower() != 'y':
+            break
+
     clear_gpu_memory()
 
-# ========== 6. Главное меню ==========
+# ========== 🔹 Main Menu / Главное меню ========== #
 def main():
-    print("Выберите режим:")
-    print("1 — Обучение модели")
-    print("2 — Генерация текста")
-    choice = input("Ваш выбор (1/2): ")
+    print("Choose a mode:")
+    print("1 - Train model")
+    print("2 - Generate text")
+    choice = input("Your choice (1/2): ")
     if choice == "1":
         train()
     elif choice == "2":
         generate()
     else:
-        print("Неверный выбор")
+        print("Invalid choice.")
+
 
 if __name__ == "__main__":
     main()

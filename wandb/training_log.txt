@@ -1,0 +1,15 @@
+Epoch 1 | Train Loss: 6.1785 | Val Loss: 5.2880 | LR: 0.000300
+Epoch 2 | Train Loss: 4.9253 | Val Loss: 4.6933 | LR: 0.000300
+Epoch 3 | Train Loss: 4.4260 | Val Loss: 4.4750 | LR: 0.000300
+Epoch 4 | Train Loss: 4.0732 | Val Loss: 4.3924 | LR: 0.000300
+Epoch 5 | Train Loss: 3.7228 | Val Loss: 4.3858 | LR: 0.000300
+Epoch 6 | Train Loss: 3.3439 | Val Loss: 4.4758 | LR: 0.000300
+Epoch 7 | Train Loss: 2.9209 | Val Loss: 4.6282 | LR: 0.000150
+Epoch 8 | Train Loss: 2.2340 | Val Loss: 4.8143 | LR: 0.000150
+Epoch 9 | Train Loss: 1.8370 | Val Loss: 5.0648 | LR: 0.000075
+Epoch 10 | Train Loss: 1.4154 | Val Loss: 5.2342 | LR: 0.000075
+Epoch 11 | Train Loss: 1.2190 | Val Loss: 5.4028 | LR: 0.000037
+Epoch 12 | Train Loss: 1.0249 | Val Loss: 5.4859 | LR: 0.000037
+Epoch 13 | Train Loss: 0.9388 | Val Loss: 5.5770 | LR: 0.000019
+Epoch 14 | Train Loss: 0.8490 | Val Loss: 5.6264 | LR: 0.000019
+Epoch 15 | Train Loss: 0.8095 | Val Loss: 5.6710 | LR: 0.000009
