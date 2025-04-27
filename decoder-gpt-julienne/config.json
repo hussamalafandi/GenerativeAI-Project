@@ -1,0 +1,1 @@
+{"model_type": "decoder-only", "vocab_size": 50257, "embed_dim": 128, "num_heads": 4, "num_layers": 2, "dropout": 0.1, "block_size": 128}
