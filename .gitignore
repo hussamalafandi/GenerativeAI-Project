@@ -1,3 +1,10 @@
+# HF-Folder
+my_transformer_lm/
+
+# My files
+wandb/
+checkpoints/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
