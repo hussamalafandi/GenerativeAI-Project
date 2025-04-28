@@ -1,0 +1,56 @@
+_wandb:
+    value:
+        cli_version: 0.19.10
+        m: []
+        python_version: 3.11.9
+        t:
+            "1":
+                - 1
+                - 5
+                - 11
+                - 49
+                - 51
+                - 53
+                - 55
+            "2":
+                - 1
+                - 5
+                - 11
+                - 49
+                - 51
+                - 53
+                - 55
+            "3":
+                - 2
+                - 16
+                - 23
+                - 55
+            "4": 3.11.9
+            "5": 0.19.10
+            "6": 4.51.3
+            "8":
+                - 1
+                - 3
+                - 5
+            "12": 0.19.10
+            "13": windows-amd64
+architecture:
+    value: TransformerDecoder
+batch_size:
+    value: 4
+dataset:
+    value: WikiText-2
+embedding_dim:
+    value: 128
+epochs:
+    value: 5
+learning_rate:
+    value: 0.0005
+max_seq_len:
+    value: 256
+nhead:
+    value: 4
+num_layers:
+    value: 2
+vocab_size:
+    value: 50257

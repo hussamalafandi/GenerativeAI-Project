@@ -1,61 +1,102 @@
-# 🧠 Abschlussprojekt: Entwicklung eines eigenen Sprachmodells
+---
+license: apache-2.0
+tags:
+- text-generation
+- transformer-decoder
+- autoregressive-model
+- wikitext-2
+- pytorch
+language:
+- en
+library_name: pytorch
+---
 
-Willkommen zum Abschlussprojekt dieses Kurses! In diesem Projekt setzt du dein Wissen über Sprachmodelle in die Praxis um und entwickelst dein eigenes autoregressives Modell auf Basis von PyTorch. Zusätzlich lernst du Tools wie Weights & Biases (wandb) und den Hugging Face Model Hub kennen – genau wie im echten ML-Workflow.
+# Simple Transformer Decoder Language Model
+
+This is a simple Transformer Decoder-based **autoregressive language model** developed as part of a deep learning project.  
+It was trained on the [WikiText-2](https://paperswithcode.com/dataset/wikitext-2) dataset using PyTorch, with a focus on **learning to generate English text** in an autoregressive manner (predicting the next token given previous tokens).
+
+The model follows a **decoder-only architecture** similar to models like **GPT**, using **causal masking** to prevent attention to future tokens.
 
 ---
 
-## ✅ Projektanforderungen
+## ✨ Model Architecture
 
-### 1. Modell
-- Erstelle ein **Decoder-only Sprachmodell** mit Modulen aus `torch.nn`.
-- Du darfst z. B. `nn.TransformerDecoder`, `nn.TransformerDecoderLayer` usw. verwenden.
-- Das Modell soll autoregressiv funktionieren (wie GPT).
-
-### 2. Tokenizer
-- Verwende einen Tokenizer aus der Hugging Face `transformers`-Bibliothek.
-- Beispiel: `AutoTokenizer` oder `GPT2Tokenizer`.
-
-### 3. Training
-- Trainiere dein Modell für mindestens **3 Epochen** (5 empfohlen).
-- Nutze einen kleinen Datensatz wie **Tiny Shakespeare**, **WikiText-2** oder einen eigenen.
-- Dein Modell sollte auch auf einer CPU trainierbar sein (< 1 Mio Parameter).
-- Schreibe den Trainingsloop komplett selbst in PyTorch (kein `Trainer` verwenden).
-
-### 4. Evaluation
-- Berechne nach jeder Epoche den Loss auf einem Validierungsdatensatz.
-- Der Loss muss während des Trainings **sichtbar sinken**.
-
-### 5. Logging
-- Verwende [wandb](https://wandb.ai), um Trainings- und Eval-Loss zu loggen.
-
-### 6. Veröffentlichung
-- Lade dein Modell am Ende auf den [Hugging Face Model Hub](https://huggingface.co/).
-- Füge eine kurze Model Card mit Beschreibung und Tags hinzu.
-
-### 7. Abgabe
-- Forke dieses Repository.
-- Erstelle einen Branch mit deinem Namen, z. B. `max-mustermann-final`.
-- Füge deine `.py`-Datei oder dein Jupyter-Notebook sowie eine `README.md` hinzu.
-- Erstelle einen Pull Request **bis spätestens 23:59 Uhr am 25.04.2025**.
+- **Model type**: Transformer Decoder (only decoder layers)
+- **Embedding size**: 128
+- **Number of attention heads**: 4
+- **Number of decoder layers**: 2
+- **Feed-forward hidden dimension**: 512
+- **Positional Encoding**: Sinusoidal (fixed, not learned)
+- **Vocabulary size**: Based on GPT-2 tokenizer (approx. 50K tokens)
+- **Max sequence length**: 256 tokens
+- **Dropout**: 0.1 (inside transformer layers)
 
 ---
 
-## 🌟 Bonus (optional)
+## 📚 Dataset
 
-Wenn du möchtest, kannst du zusätzlich ein vortrainiertes Modell wie GPT-2 mithilfe der Hugging Face `transformers`-Bibliothek finetunen:
+- **Name**: WikiText-2
+- **Size**: ~2 million tokens
+- **Language**: English
+- **Task**: Next-token prediction (causal language modeling)
 
-- Lade ein GPT-2-Modell und den passenden Tokenizer (`GPT2Tokenizer`) mit `from_pretrained`.
-- Trainiere es auf deinem Datensatz mit der `Trainer` API.
-- Logge mit wandb und lade auch dieses Modell auf Hugging Face hoch.
-
----
-
-## 📝 Wichtige Hinweise
-
-- Logging mit wandb, das Hochladen auf den Hugging Face Hub und der Pull Request auf GitHub sind **Pflicht**.
-- Die Modellqualität ist nicht entscheidend, aber **der Loss muss sinken**.
-- Du wirst am **Montag, den 28.04.2025** dein Projekt präsentieren und deinen Code erklären.
+**Dataset Link**: [WikiText-2 on Hugging Face Datasets](https://huggingface.co/datasets/wikitext)
 
 ---
 
-Viel Erfolg! 🚀
+## 🏋️‍♂️ Training Details
+
+- **Optimizer**: Adam
+- **Learning rate**: 5e-4
+- **Batch size**: 4
+- **Training epochs**: 5
+- **Loss function**: CrossEntropyLoss
+- **Logging**: Weights & Biases (wandb)
+
+✅ Loss decreased successfully during training, indicating the model learned the structure of English text.
+
+---
+
+## 🚀 How to Use
+
+> Note: Since this is a custom PyTorch model (not a Hugging Face PreTrainedModel), you must manually define and load it.
+
+```python
+import torch
+from transformers import AutoTokenizer
+from your_custom_model_code import SimpleTransformerDecoderModel  # import your model class
+
+# Load tokenizer
+tokenizer = AutoTokenizer.from_pretrained("mreeza/simple-transformer-model")
+
+# Initialize the model
+model = SimpleTransformerDecoderModel(
+    vocab_size=len(tokenizer),
+    d_model=128,
+    nhead=4,
+    num_layers=2,
+    max_seq_len=256
+)
+
+# Load trained weights
+model.load_state_dict(torch.load("pytorch_model.bin", map_location="cpu"))
+model.eval()
+
+# Generate text
+def generate_text(model, tokenizer, prompt="Once upon a time", max_length=50):
+    model.eval()
+    input_ids = tokenizer(prompt, return_tensors="pt").input_ids
+
+    with torch.no_grad():
+        for _ in range(max_length):
+            outputs = model(input_ids)
+            next_token_logits = outputs[:, -1, :]
+            next_token_id = torch.argmax(next_token_logits, dim=-1).unsqueeze(0)
+            input_ids = torch.cat([input_ids, next_token_id], dim=-1)
+    
+    return tokenizer.decode(input_ids[0], skip_special_tokens=True)
+
+prompt = "Once upon a time"
+generated = generate_text(model, tokenizer, prompt)
+print(generated)

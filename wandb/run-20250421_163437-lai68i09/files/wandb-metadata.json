@@ -1,0 +1,31 @@
+{
+  "os": "Windows-10-10.0.26100-SP0",
+  "python": "CPython 3.11.9",
+  "startedAt": "2025-04-21T14:34:37.129987Z",
+  "program": "c:\\Users\\hshakademie1\\Desktop\\genrative AI-I\\Project\\GenerativeAI-Project\\sprachmodel.ipynb",
+  "codePath": "sprachmodel.ipynb",
+  "git": {
+    "remote": "https://github.com/Reza-Afzali/GenerativeAI-Project.git",
+    "commit": "78a9730daca512deb230d7dae7722bd203023945"
+  },
+  "email": "afzali.r.d@gmail.com",
+  "root": "c:\\Users\\hshakademie1\\Desktop\\genrative AI-I\\Project\\GenerativeAI-Project",
+  "host": "DESKTOP-O1GAO6G",
+  "executable": "c:\\Users\\hshakademie1\\Desktop\\genrative AI-I\\Project\\GenerativeAI-Project\\projai-env\\Scripts\\python.exe",
+  "codePathLocal": "sprachmodel.ipynb",
+  "cpu_count": 10,
+  "cpu_count_logical": 12,
+  "disk": {
+    "/": {
+      "total": "509010243584",
+      "used": "234634014720"
+    }
+  },
+  "memory": {
+    "total": "16512606208"
+  },
+  "cpu": {
+    "count": 10,
+    "countLogical": 12
+  }
+}
