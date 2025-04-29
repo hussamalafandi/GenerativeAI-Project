@@ -172,3 +172,8 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+
+# Игнорировать директории my-mini-gpt-tokenizer и my-mini-gpt-model
+my-mini-gpt-tokenizer/
+my-mini-gpt-model/
