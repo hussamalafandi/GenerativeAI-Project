@@ -1,8 +1,0 @@
-Epoch 1/5, Loss: 10.9481
-Epoch 2/5, Loss: 9.9774
-Epoch 3/5, Loss: 9.5425
-Epoch 4/5, Loss: 9.2681
-Epoch 5/5, Loss: 8.9877
-No files have been modified since last commit. Skipping to prevent empty commit.
-c:\Users\hshakademie9\anaconda3\Lib\site-packages\huggingface_hub\utils\_deprecation.py:131: FutureWarning: 'update_repo_visibility' (from 'huggingface_hub.hf_api') is deprecated and will be removed from version '0.32'. Please use `update_repo_settings` instead.
-  warnings.warn(warning_message, FutureWarning)

@@ -193,3 +193,5 @@ wandb/gpt2-finetuned/checkpoint-36/*
 !wandb/gpt2-finetuned/checkpoint-36/GPT2Modell.ipynb
 !wandb/gpt2-finetuned/checkpoint-36/README.md
 !wandb/gpt2-finetuned/checkpoint-36/sprachmodelle.ipynb
+
+clean_project/*
