@@ -1,2 +1,0 @@
-wandb/gpt2-finetuned/checkpoint-36/model.safetensors filter=lfs diff=lfs merge=lfs -text
-my-mini-gpt-model/pytorch_model.bin filter=lfs diff=lfs merge=lfs -text
