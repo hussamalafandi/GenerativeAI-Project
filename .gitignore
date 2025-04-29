@@ -180,3 +180,16 @@ my-mini-gpt-model/
 
 wandb/gpt2-finetuned/checkpoint-36/model.safetensors
 wandb/gpt2-finetuned/checkpoint-36/optimizer.pt
+
+
+# Игнорировать всю папку wandb, кроме нужных файлов
+wandb/*
+!wandb/GPT2Modell.ipynb
+!wandb/README.md
+!wandb/sprachmodelle.ipynb
+
+# Если нужно игнорировать файлы в папке checkpoint-36
+wandb/gpt2-finetuned/checkpoint-36/*
+!wandb/gpt2-finetuned/checkpoint-36/GPT2Modell.ipynb
+!wandb/gpt2-finetuned/checkpoint-36/README.md
+!wandb/gpt2-finetuned/checkpoint-36/sprachmodelle.ipynb
