@@ -177,3 +177,6 @@ cython_debug/
 # Игнорировать директории my-mini-gpt-tokenizer и my-mini-gpt-model
 my-mini-gpt-tokenizer/
 my-mini-gpt-model/
+
+wandb/gpt2-finetuned/checkpoint-36/model.safetensors
+wandb/gpt2-finetuned/checkpoint-36/optimizer.pt
