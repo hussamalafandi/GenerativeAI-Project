@@ -174,6 +174,7 @@ cython_debug/
 .pypirc
 
 
+
 # Игнорировать директории my-mini-gpt-tokenizer и my-mini-gpt-model
 my-mini-gpt-tokenizer/
 my-mini-gpt-model/
@@ -195,3 +196,5 @@ wandb/gpt2-finetuned/checkpoint-36/*
 !wandb/gpt2-finetuned/checkpoint-36/sprachmodelle.ipynb
 
 clean_project/*
+=======
+

@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 🧠 MiniGPT: Autoregressive Language Model
 
 🔗 Weitere Links:
@@ -137,6 +138,8 @@ README.md schreiben
 🎉 Vielen Dank fürs Anschauen!
 
 =======
+=======
+>>>>>>> ca60a7dc7597e825a9917490aa61fccc09869101
 # 🧠 Abschlussprojekt: Entwicklung eines eigenen Sprachmodells
 
 Willkommen zum Abschlussprojekt dieses Kurses! In diesem Projekt setzt du dein Wissen über Sprachmodelle in die Praxis um und entwickelst dein eigenes autoregressives Modell auf Basis von PyTorch. Zusätzlich lernst du Tools wie Weights & Biases (wandb) und den Hugging Face Model Hub kennen – genau wie im echten ML-Workflow.
@@ -198,4 +201,5 @@ Wenn du möchtest, kannst du zusätzlich ein vortrainiertes Modell wie GPT-2 mit
 ---
 
 Viel Erfolg! 🚀
->>>>>>> f57bf29360e79707cf126d7601fae3c338c0c8b9
+
+
