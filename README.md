@@ -1,61 +1,130 @@
-# 🧠 Abschlussprojekt: Entwicklung eines eigenen Sprachmodells
+# Teil 1: Decoder Language Model 
 
-Willkommen zum Abschlussprojekt dieses Kurses! In diesem Projekt setzt du dein Wissen über Sprachmodelle in die Praxis um und entwickelst dein eigenes autoregressives Modell auf Basis von PyTorch. Zusätzlich lernst du Tools wie Weights & Biases (wandb) und den Hugging Face Model Hub kennen – genau wie im echten ML-Workflow.
+**Inhalt**:
+- **Titel**: Decoder Language Model: Tiny Shakespeare
+- **Untertitel**: Ein autoregressives Sprachmodell mit PyTorch
+- **Autor**: Sakina Ahmadi
+- **Datum**: 5. Mai 2025
+- **Dozent**: M.Sc. Hussam Alafandi
 
----
 
-## ✅ Projektanforderungen
+## Projektübersicht
+**Inhalt**:
+- **Ziel**: Entwicklung eines kleinen autoregressiven Sprachmodells
+- **Datensatz**: Tiny Shakespeare (~500k Zeichen)
+- **Technologien**:
+  - PyTorch für Modell und Training
+  - wandb für Logging
+  - Hugging Face für Modell-Upload
+  - GitHub für Code-Abgabe
+- **Anforderungen erfüllt**: Modellimplementierung, Training, Textgenerierung, Logging, Upload
 
-### 1. Modell
-- Erstelle ein **Decoder-only Sprachmodell** mit Modulen aus `torch.nn`.
-- Du darfst z. B. `nn.TransformerDecoder`, `nn.TransformerDecoderLayer` usw. verwenden.
-- Das Modell soll autoregressiv funktionieren (wie GPT).
 
-### 2. Tokenizer
-- Verwende einen Tokenizer aus der Hugging Face `transformers`-Bibliothek.
-- Beispiel: `AutoTokenizer` oder `GPT2Tokenizer`.
+## Modellarchitektur
+**Inhalt**:
+- **Transformer Decoder**:
+  - `d_model=128`, `num_layers=2`, `nhead=4`
+  - ~500k–700k Parameter
+- **Code-Snippet** (aus `src/model.py`):
+  ```python
+  class DecoderLanguageModel(nn.Module):
+      def __init__(self, vocab_size, d_model, nhead, num_layers, max_len):
+          super().__init__()
+          self.embedding = nn.Embedding(vocab_size, d_model)
+          self.pos_encoder = PositionalEncoding(d_model, max_len)
+          self.transformer_decoder = nn.TransformerDecoder(...)
+  ```
 
-### 3. Training
-- Trainiere dein Modell für mindestens **3 Epochen** (5 empfohlen).
-- Nutze einen kleinen Datensatz wie **Tiny Shakespeare**, **WikiText-2** oder einen eigenen.
-- Dein Modell sollte auch auf einer CPU trainierbar sein (< 1 Mio Parameter).
-- Schreibe den Trainingsloop komplett selbst in PyTorch (kein `Trainer` verwenden).
+## Training und Ergebnisse
+**Inhalt**:
+- **Training**:
+  - 5 Epochen, benutzerdefinierter PyTorch-Loop
+  - GPT2Tokenizer für Daten
+  - wandb für Logging
+  - wandb: `https://wandb.ai/ahmadi-sakina-hochschule-hannover/decoder-language-model/runs/mcr5bqb4?nw=nwuserahmadisakina` 
+- **Textgenerierung**:
+  - Beispiel: „To be or not to be not not not ...“
+  - Repetitiv, aber akzeptabel
 
-### 4. Evaluation
-- Berechne nach jeder Epoche den Loss auf einem Validierungsdatensatz.
-- Der Loss muss während des Trainings **sichtbar sinken**.
 
-### 5. Logging
-- Verwende [wandb](https://wandb.ai), um Trainings- und Eval-Loss zu loggen.
+## Herausforderungen und Lösungen
+**Inhalt**:
+- **Dimensionsfehler**:
+  - `RuntimeError: The size of tensor a (33) must match the size of tensor b (32)`
+  - Lösung: Sequenzlängen in `src/generate.py` angepasst
+- **Hugging Face-Upload**:
+  - Syntaxfehler in `src/upload_hf.py` behoben
+  - API-Token mit `.env` verwaltet
+- **GitHub**:
+  - Fehler: `src refspec ahmadiCSE-final`, fehlende `README.md`
+  - Lösung: `README.md` erstellt, Branch gepusht
 
-### 6. Veröffentlichung
-- Lade dein Modell am Ende auf den [Hugging Face Model Hub](https://huggingface.co/).
-- Füge eine kurze Model Card mit Beschreibung und Tags hinzu.
 
-### 7. Abgabe
-- Forke dieses Repository.
-- Erstelle einen Branch mit deinem Namen, z. B. `max-mustermann-final`.
-- Füge deine `.py`-Datei oder dein Jupyter-Notebook sowie eine `README.md` hinzu.
-- Erstelle einen Pull Request **bis spätestens 23:59 Uhr am 25.04.2025**.
+## Demo und Hugging Face
+**Inhalt**:
+- **Textgenerierung**:
+  - Ausgabe: „To be or not to be not not not ...“
+  - Code: `python src/generate.py`
+- **Hugging Face**:
+  - Modell: `https://huggingface.co/ahmadisakina/decoder-language-model`
+  - Model-Card mit Metriken und Nutzung
+- **Bild**: Screenshot der Hugging Face-Seite oder Textgenerierung
 
----
 
-## 🌟 Bonus (optional)
+## Fazit 
+**Inhalt**:
+- **Zusammenfassung**:
+  - Alle Anforderungen erfüllt: Modell, Training, Generierung, wandb, Hugging Face, GitHub
+- **Learnings**:
+  - Transformer-Architekturen, Debugging, Tool-Integration
+- **Ausblick**:
+  - größeres Modell
 
-Wenn du möchtest, kannst du zusätzlich ein vortrainiertes Modell wie GPT-2 mithilfe der Hugging Face `transformers`-Bibliothek finetunen:
+# Teil 2: Finetuning eines Sprachmodells mit HuggingFace Transformers
 
-- Lade ein GPT-2-Modell und den passenden Tokenizer (`GPT2Tokenizer`) mit `from_pretrained`.
-- Trainiere es auf deinem Datensatz mit der `Trainer` API.
-- Logge mit wandb und lade auch dieses Modell auf Hugging Face hoch.
+## Systeminformationen
 
----
+- Pfad zur Umgebung: `C:\Users\ahmad\finetuning\venv\Lib\site-packages\`
+- Python-Bibliothek: `transformers`
+- Trainingsart: Sprachmodellierung (Causal Language Modeling)
 
-## 📝 Wichtige Hinweise
 
-- Logging mit wandb, das Hochladen auf den Hugging Face Hub und der Pull Request auf GitHub sind **Pflicht**.
-- Die Modellqualität ist nicht entscheidend, aber **der Loss muss sinken**.
-- Du wirst am **Montag, den 28.04.2025** dein Projekt präsentieren und deinen Code erklären.
+## Trainingsverlauf
 
----
+| Epoche | Durchschnittlicher Loss | Lernrate       | Grad-Norm | Bemerkung                          |
+|--------|-------------------------|----------------|-----------|------------------------------------|
+| 0.08   | 4.3157                  | 4.875e-05       | 9.04      | Trainingsbeginn                    |
+| 0.15   | 4.0841                  | 4.748e-05       | 7.83      |                                    |
+| 0.3    | 3.8335                  | 4.496e-05       | 6.00      | Starker Abfall der Verlustwerte    |
+| 0.76   | 3.8441                  | 3.738e-05       | 4.56      | Leichter Anstieg nach Tiefpunkt    |
+| 1.14   | 3.5266                  | 3.107e-05       | 4.39      | Stetige Verbesserung               |
+| 1.97   | 3.4443                  | 1.718e-05       | 4.05      |                                    |
+| 2.35   | 3.3055                  | 1.087e-05       | 4.24      | Tiefpunkt                          |
+| 2.95   | 3.4156                  | 7.702e-07       | 4.40      | Letzter gemeldeter Stand           |
 
-Viel Erfolg! 🚀
+
+## Gesamtstatistiken
+
+- **Trainingsdauer:** 5287 Sekunden (~1.47 Stunden)
+- **Durchschnittlicher Loss:** 3.5766
+- **Samples/Sekunde:** 1.498
+- **Schritte/Sekunde:** 0.749
+- **Trainings-Epochen:** 3.0
+- **Gesamtschritte:** 3960
+
+
+## Fazit
+
+Das Finetuning verlief stabil und zeigte eine deutliche Verbesserung des Verlustwerts über die Zeit. Insgesamt zeigt das Modell ein gutes Lernverhalten, und weitere Optimierungsschritte (z. B. Hyperparameter-Tuning, GPU-Beschleunigung) könnten die Leistung weiter verbessern.
+
+
+## Empfehlungen
+
+- Migration der Datensätze zur `datasets`-Bibliothek
+- Einsatz einer GPU für effizienteres Training
+- Optimierung der Lernrate und Batchgröße für bessere Konvergenz
+- Loss-Typ in der Konfigurationsdatei korrekt setzen
+
+
+
+# Vielen Dank
