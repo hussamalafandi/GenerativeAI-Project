@@ -1,0 +1,155 @@
+# Abschlussprojekt: Entwicklung eines eigenen Sprachmodells
+
+# 1.Installation der erforderlichen Bibliotheken
+
+import torch
+import torch.nn as nn
+from torch.utils.data import Dataset, DataLoader
+import wandb
+wandb.login()
+from transformers import GPT2TokenizerFast
+from huggingface_hub import login, HfApi, HfFolder, upload_file
+login()
+import requests
+import os
+
+# wandb starten
+wandb.init(project="sprachmodell-finalprojekt")
+
+# Gerätekontrolle
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print("Verwendetes Gerät", device)
+
+# 2. Tiny Shakespeare-Datensatz herunterladen
+url = "https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt"
+data_path = "shakespeare.txt"
+if not os.path.exists(data_path):
+    with open(data_path, "w", encoding="utf-8") as f:
+        f.write(requests.get(url).text)
+
+with open(data_path, "r", encoding="utf-8") as f:
+    text = f.read()
+
+print(f"Länge des Datensatzes (Zeichen): {len(text):,}")
+
+# 3. Tokenizer laden und Daten tokenisieren
+tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
+tokenizer.pad_token = tokenizer.eos_token
+
+encodings = tokenizer(text, return_tensors="pt", truncation=True, max_length=1024)
+input_ids = encodings.input_ids[0]
+
+print(f"Gesamtzahl der Tokens: {len(input_ids):,}")
+
+# 4. Trainings- / Validierungsaufteilung
+split_idx = int(0.9 * len(input_ids))
+train_ids = input_ids[:split_idx]
+val_ids = input_ids[split_idx:]
+
+# 5. Datensatzklasse
+class ShakespeareDataset(Dataset):
+    def __init__(self, input_ids, block_size=128):
+        self.block_size = block_size
+        self.input_ids = input_ids
+
+    def __len__(self):
+        return len(self.input_ids) - self.block_size
+
+    def __getitem__(self, idx):
+        x = self.input_ids[idx:idx+self.block_size]
+        y = self.input_ids[idx+1:idx+self.block_size+1]
+        return x, y
+
+block_size = 64
+train_dataset = ShakespeareDataset(train_ids, block_size)
+val_dataset = ShakespeareDataset(val_ids, block_size)
+train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
+val_loader = DataLoader(val_dataset, batch_size=32)
+
+# 6. Transformer Decoder-Modell
+class TransformerLanguageModel(nn.Module):
+    def __init__(self, vocab_size, d_model=64, nhead=4, num_layers=2):
+        super().__init__()
+        self.embedding = nn.Embedding(vocab_size, d_model)
+        self.pos_embedding = nn.Parameter(torch.zeros(1, block_size, d_model))
+        decoder_layer = nn.TransformerDecoderLayer(d_model=d_model, nhead=nhead)
+        self.transformer_decoder = nn.TransformerDecoder(decoder_layer, num_layers=num_layers)
+        self.lm_head = nn.Linear(d_model, vocab_size)
+
+    def forward(self, x):
+     x = self.embedding(x) + self.pos_embedding[:, :x.size(1), :]  # (B, T, D)
+     x = x.transpose(0, 1)  # (T, B, D)
+     tgt_mask = nn.Transformer.generate_square_subsequent_mask(x.size(0)).to(x.device)
+     x = self.transformer_decoder(x, x, tgt_mask=tgt_mask)
+     x = x.transpose(0, 1)  # (B, T, D)
+     return self.lm_head(x)
+
+
+model = TransformerLanguageModel(vocab_size=tokenizer.vocab_size).to(device)
+optimizer = torch.optim.Adam(model.parameters(), lr=3e-4)
+criterion = nn.CrossEntropyLoss()
+
+# 7. Trainings- und Validierungsschleife
+epochs = 3
+for epoch in range(epochs):
+    model.train()
+    total_loss = 0
+    for x, y in train_loader:
+        x, y = x.to(device), y.to(device)
+        optimizer.zero_grad()
+        logits = model(x)
+        loss = criterion(logits.view(-1, logits.size(-1)), y.view(-1))
+        loss.backward()
+        optimizer.step()
+        total_loss += loss.item()
+
+    avg_train_loss = total_loss / len(train_loader)
+
+    # Validation
+    model.eval()
+    val_loss = 0
+    with torch.no_grad():
+        for x, y in val_loader:
+            x, y = x.to(device), y.to(device)
+            logits = model(x)
+            loss = criterion(logits.view(-1, logits.size(-1)), y.view(-1))
+            val_loss += loss.item()
+    avg_val_loss = val_loss / len(val_loader)
+
+    wandb.log({"train_loss": avg_train_loss, "val_loss": avg_val_loss, "epoch": epoch+1})
+    print(f"Epoch {epoch+1}: train loss = {avg_train_loss:.4f}, val loss = {avg_val_loss:.4f}")
+
+# 8. Modell speichern und auf den Hugging Face Hub hochladen
+model_save_path = "language_model.pt"
+torch.save(model.state_dict(), model_save_path)
+
+# Hugging Face einloggen (einmal ausführen reicht)
+login()
+# Modell und Tokenizer laden (örnek repo_id: "okansav/sprachmodell-final")
+from huggingface_hub import Repository
+repo_id = "okansav/sprachmodell-final"
+
+# Modellkarte
+model_card = """
+----
+tags:
+- pytorch
+- transformer
+- language-model
+- shakespeare
+license: mit
+---
+
+# Mini Transformer Language Model
+Dieses Modell ist ein kleines Transformer-Decoder-Sprachmodell, das auf dem Tiny Shakespeare-Datensatz trainiert wurde.
+"""
+with open("README.md", "w", encoding="utf-8") as f:
+    f.write(model_card)
+
+# Dateien auf den Hugging Face Hub hochladen
+api = HfApi()
+api.create_repo(repo_id, exist_ok=True)
+api.upload_file(path_or_fileobj=model_save_path, path_in_repo="language_model.pt", repo_id=repo_id)
+api.upload_file(path_or_fileobj="README.md", path_in_repo="README.md", repo_id=repo_id)
+
+print("Das Modell wurde erfolgreich auf den Hugging Face Hub hochgeladen!")
