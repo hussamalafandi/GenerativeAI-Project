@@ -1,0 +1,31 @@
+{
+  "os": "Windows-10-10.0.19045-SP0",
+  "python": "CPython 3.13.0",
+  "startedAt": "2025-05-13T23:33:55.427649Z",
+  "program": "c:\\Users\\wr1\\Desktop\\Python\\tiny-shakespeare\\train_model1.py",
+  "codePath": "Desktop\\Python\\tiny-shakespeare\\train_model1.py",
+  "git": {
+    "remote": "https://github.com/Volodymyr10105/tiny-shakespeare-template.git",
+    "commit": "07c3052bd967f7928cc218cf616bf010de23e40d"
+  },
+  "email": "invest.ua1@gmail.com",
+  "root": "C:\\Users\\wr1\\Desktop\\Python\\tiny-shakespeare",
+  "host": "DESKTOP-NRL0FBT",
+  "executable": "C:\\Program Files\\Python313\\python.exe",
+  "codePathLocal": "train_model1.py",
+  "cpu_count": 2,
+  "cpu_count_logical": 4,
+  "disk": {
+    "/": {
+      "total": "255464468480",
+      "used": "127707664384"
+    }
+  },
+  "memory": {
+    "total": "8267210752"
+  },
+  "cpu": {
+    "count": 2,
+    "countLogical": 4
+  }
+}
