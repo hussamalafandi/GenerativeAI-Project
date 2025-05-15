@@ -1,0 +1,8 @@
+{
+        "model_type": "decoder-only",
+        "vocab_size": 50257,
+        "hidden_size": 64,
+        "num_attention_heads": 4,
+        "num_hidden_layers": 1,
+        "max_position_embeddings": 64
+    }
