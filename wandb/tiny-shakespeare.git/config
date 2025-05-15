@@ -1,0 +1,10 @@
+[core]
+	repositoryformatversion = 0
+	filemode = false
+	bare = true
+	symlinks = false
+	ignorecase = true
+[remote "origin"]
+	url = git@github.com:Volodymyr10105/tiny-shakespeare.git
+	fetch = +refs/*:refs/*
+	mirror = true
